@@ -1,56 +1,63 @@
 import os
-import torch
+import shutil
+import random
 from torchvision import transforms, datasets
-from torch.utils.data import DataLoader, random_split
-import PIL.Image as Image
+from PIL import Image
+import torch
 
-def preprocess_data(data_dir, output_dir=None, img_size=(224, 224), split_ratios=(0.8, 0.1, 0.1)):
-    """
-    Preprocesses the Cats vs Dogs dataset: resizes images and splits into train/val/test.
-    Includes data augmentation for the training set as per assignment requirements.
-    """
-    train_transform = transforms.Compose([
-        transforms.Resize(img_size),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomRotation(10),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    ])
+def create_dummy_data(data_dir, num_images=20):
+    """Creates dummy cats and dogs images for testing the pipeline."""
+    os.makedirs(os.path.join(data_dir, 'cats'), exist_ok=True)
+    os.makedirs(os.path.join(data_dir, 'dogs'), exist_ok=True)
     
-    val_test_transform = transforms.Compose([
-        transforms.Resize(img_size),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    ])
+    for i in range(num_images):
+        # Create a random image
+        img = Image.new('RGB', (224, 224), color=(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)))
+        label = 'cats' if i % 2 == 0 else 'dogs'
+        img.save(os.path.join(data_dir, label, f'image_{i}.jpg'))
     
-    # Check if data_dir exists
-    if not os.path.exists(data_dir):
-        print(f"Directory {data_dir} not found. Please download the dataset.")
-        return
+    print(f"Created {num_images} dummy images in {data_dir}")
 
-    # Loading dataset twice to apply different transforms is inefficient for large datasets,
-    # but for this script, we'll demonstrate the intent.
-    full_dataset = datasets.ImageFolder(data_dir)
+def preprocess_data(raw_dir, processed_dir, img_size=(224, 224), split_ratios=(0.8, 0.1, 0.1)):
+    """
+    Physically splits the data into train, val, and test directories.
+    """
+    if not os.path.exists(raw_dir) or not os.listdir(raw_dir):
+        print(f"Raw data directory {raw_dir} is empty. Creating dummy data...")
+        create_dummy_data(raw_dir)
+
+    classes = [d for d in os.listdir(raw_dir) if os.path.isdir(os.path.join(raw_dir, d))]
     
-    num_total = len(full_dataset)
-    num_train = int(split_ratios[0] * num_total)
-    num_val = int(split_ratios[1] * num_total)
-    num_test = num_total - num_train - num_val
-    
-    train_indices, val_indices, test_indices = random_split(
-        range(num_total), [num_train, num_val, num_test]
-    )
-    
-    # In practice, we would use Subset and apply transforms via a custom wrapper or during iteration.
-    print(f"Split data into: Train({num_train}), Val({num_val}), Test({num_test})")
-    print("Data augmentation applied to training set.")
-    
-    return train_indices, val_indices, test_indices
+    for cls in classes:
+        cls_raw_dir = os.path.join(raw_dir, cls)
+        images = [f for f in os.listdir(cls_raw_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+        random.shuffle(images)
+        
+        n = len(images)
+        n_train = int(n * split_ratios[0])
+        n_val = int(n * split_ratios[1])
+        
+        splits = {
+            'train': images[:n_train],
+            'val': images[n_train:n_train + n_val],
+            'test': images[n_train + n_val:]
+        }
+        
+        for split_name, split_images in splits.items():
+            split_dir = os.path.join(processed_dir, split_name, cls)
+            os.makedirs(split_dir, exist_ok=True)
+            for img_name in split_images:
+                shutil.copy2(os.path.join(cls_raw_dir, img_name), os.path.join(split_dir, img_name))
+                
+    print(f"Data split completed. Processed data saved in {processed_dir}")
 
 if __name__ == "__main__":
-    # Example usage (placeholders)
-    DATA_RAW = "data/raw"
-    DATA_PROCESSED = "data/processed"
+    RAW_DIR = "data/raw"
+    PROCESSED_DIR = "data/processed"
     
-    # Implementation for downloading/unzipping dataset would go here
-    print("Pre-processing script initialized. Ready to process images when data is available.")
+    # Ensure processed dir is clean
+    if os.path.exists(PROCESSED_DIR):
+        shutil.rmtree(PROCESSED_DIR)
+    os.makedirs(PROCESSED_DIR)
+    
+    preprocess_data(RAW_DIR, PROCESSED_DIR)
