@@ -134,33 +134,27 @@ python tests/smoke_test.py
 
 ## Kubernetes Deployment
 
-### Prerequisites
-- kubectl
-- Local cluster: minikube, kind, or microk8s
+For complete Kubernetes deployment instructions, including setup for Windows, macOS, and Linux, see [k8s/README.md](k8s/README.md).
 
-### Deploy
+The Kubernetes deployment includes:
+- Setup instructions for Docker Desktop Kubernetes, Minikube, and kind
+- Step-by-step deployment guide
+- Access methods (NodePort, Port Forward)
+- Scaling and update procedures
+- Complete troubleshooting guide
+
+**Quick Start:**
 ```bash
 # Build image
 docker build -t cats-dogs-classifier:latest .
 
-# For minikube
-minikube start
-eval $(minikube docker-env)
-docker build -t cats-dogs-classifier:latest .
-
-# For kind
-kind create cluster --name mlops-cluster
-kind load docker-image cats-dogs-classifier:latest --name mlops-cluster
-
-# Apply manifests
+# Deploy
 kubectl apply -f k8s/deployment.yaml
 kubectl apply -f k8s/service.yaml
 
-# Access service
+# Access
 kubectl port-forward service/cats-dogs-classifier 8000:8000
 ```
-
-See [k8s/README.md](k8s/README.md) for detailed instructions.
 
 ## CI/CD Pipeline
 GitHub Actions automatically:
