@@ -7,7 +7,8 @@ An end-to-end MLOps pipeline for binary image classification (Cats vs Dogs) with
 - **Experiment Tracking**: MLflow for metrics and model versioning
 - **Inference API**: FastAPI with `/health` and `/predict` endpoints
 - **Containerization**: Docker and Docker Compose
-- **CI/CD**: GitHub Actions for automated testing and deployment
+- **Kubernetes**: Production-ready deployment manifests
+- **CI/CD**: GitHub Actions for automated testing, training, and deployment
 - **Monitoring**: Request/response logging and latency tracking
 
 ## Project Structure
@@ -20,8 +21,12 @@ An end-to-end MLOps pipeline for binary image classification (Cats vs Dogs) with
 │   └── app.py          # FastAPI inference service
 ├── tests/              # Unit tests and smoke tests
 ├── .github/workflows/  # CI/CD pipelines
+├── k8s/
+│   ├── deployment.yaml # Kubernetes deployment
+│   └── service.yaml    # Kubernetes service
 ├── Dockerfile          # Container configuration
-└── docker-compose.yml  # Deployment setup
+├── docker-compose.yml  # Deployment setup
+└── README.md           # This file
 ```
 
 ## Prerequisites
@@ -116,20 +121,92 @@ pytest tests/ -v
 
 ## Docker Deployment
 
-### Build and Run
+**Note:** For Kubernetes deployment instructions, see [k8s/README.md](k8s/README.md) which includes Docker Desktop Kubernetes and Minikube setup for all platforms.
+
+### Windows: Install Docker Desktop
+1. Download Docker Desktop for Windows: https://www.docker.com/products/docker-desktop/
+2. Install with default options
+3. Enable WSL 2 when prompted (if using WSL)
+4. Restart your computer
+5. Open Docker Desktop and wait until it shows "Docker Desktop is running"
+
+Verify Docker Installation:
+```bash
+docker --version
+docker info
+```
+
+### macOS: Install Docker Desktop
+1. Download Docker Desktop for Mac: https://www.docker.com/products/docker-desktop/
+2. Choose the correct version:
+   - Apple Silicon (M1/M2/M3): Download "Mac with Apple chip"
+   - Intel Mac: Download "Mac with Intel chip"
+3. Open the downloaded .dmg file
+4. Drag Docker to Applications folder
+5. Open Docker from Applications
+6. Complete the setup wizard
+7. Wait until Docker Desktop shows "Docker Desktop is running"
+
+Verify Docker Installation:
+```bash
+docker --version
+docker info
+```
+
+### Linux: Install Docker
+Ubuntu/Debian:
+```bash
+# Remove old versions
+sudo apt-get remove docker docker-engine docker.io containerd runc
+
+# Install dependencies
+sudo apt-get update
+sudo apt-get install ca-certificates curl gnupg lsb-release
+
+# Add Docker's official GPG key
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+# Set up repository
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Install Docker
+sudo apt-get update
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+# Start Docker
+sudo systemctl start docker
+sudo systemctl enable docker
+
+# Add user to docker group (optional, to run without sudo)
+sudo usermod -aG docker $USER
+```
+
+Verify Docker Installation:
+```bash
+docker --version
+docker info
+```
+
+### Build Docker Image
 ```bash
 docker build -t cats-dogs-classifier .
+```
+
+### Run Container
+```bash
 docker run -p 8000:8000 cats-dogs-classifier
+```
+
+### Test Container
+```bash
+curl http://localhost:8000/health
+curl -X POST "http://localhost:8000/predict" -F "file=@path/to/image.jpg"
 ```
 
 ### Using Docker Compose
 ```bash
 docker-compose up --build
-```
-
-### Smoke Test
-```bash
-python tests/smoke_test.py
 ```
 
 ## Kubernetes Deployment
@@ -158,7 +235,9 @@ kubectl port-forward service/cats-dogs-classifier 8000:8000
 
 ## CI/CD Pipeline
 GitHub Actions automatically:
-- Runs unit tests on every push
+- Runs linting (Black, Flake8) on every push
+- Runs unit tests with coverage reporting
+- Trains model and uploads artifacts
 - Builds Docker image
 - Deploys on merge to main branch
 
