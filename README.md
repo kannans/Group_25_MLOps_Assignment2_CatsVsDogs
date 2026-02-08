@@ -1,36 +1,28 @@
-# Cats vs Dogs Binary Classification - MLOps Assignment 2
+# Cats vs Dogs Classification - MLOps Pipeline
 
-An end-to-end MLOps pipeline for model building, artifact creation, packaging, containerization, and CI/CD-based deployment for a binary image classification task (Cats vs Dogs).
+An end-to-end MLOps pipeline for binary image classification (Cats vs Dogs) with experiment tracking, containerization, and CI/CD.
+
+## Features
+- **Data Versioning**: DVC for dataset management
+- **Experiment Tracking**: MLflow for metrics and model versioning
+- **Inference API**: FastAPI with `/health` and `/predict` endpoints
+- **Containerization**: Docker and Docker Compose
+- **CI/CD**: GitHub Actions for automated testing and deployment
+- **Monitoring**: Request/response logging and latency tracking
 
 ## Project Structure
 ```
-├── data/               # Dataset files (managed by DVC)
-│   ├── raw/            # Raw images
-│   └── processed/      # Pre-processed images (224x224)
-├── models/             # Trained model artifacts
-├── notebooks/          # Exploratory Data Analysis
-├── src/                # Source code
-│   ├── __init__.py
-│   ├── preprocessing.py # Data loading and augmentation
-│   ├── train.py        # Model training and MLflow tracking
-│   └── app.py          # FastAPI application
-├── tests/              # Unit tests
-│   ├── __init__.py
-│   └── test_pipeline.py # Tests for preprocessing and inference
+├── data/               # Dataset (managed by DVC)
+├── models/             # Trained models (.pt files)
+├── src/
+│   ├── preprocessing.py # Data preprocessing (80/10/10 split + augmentation)
+│   ├── train.py        # Model training with MLflow
+│   └── app.py          # FastAPI inference service
+├── tests/              # Unit tests and smoke tests
 ├── .github/workflows/  # CI/CD pipelines
-├── Dockerfile          # Containerization script
-├── docker-compose.yml  # Local deployment setup
-├── requirements.txt    # Python dependencies
-└── README.md           # This file
+├── Dockerfile          # Container configuration
+└── docker-compose.yml  # Deployment setup
 ```
-
-## Features
-- **Data Versioning**: DVC for tracking datasets and pre-processed data.
-- **Experiment Tracking**: MLflow for logging runs, metrics, and models.
-- **Inference Service**: FastAPI with `/health` and `/predict` endpoints.
-- **Containerization**: Docker for reproducible environments.
-- **CI/CD**: GitHub Actions for automated testing and image building.
-- **Testing**: Unit tests with `pytest`.
 
 ## Prerequisites
 - Python 3.9+
@@ -39,83 +31,113 @@ An end-to-end MLOps pipeline for model building, artifact creation, packaging, c
 
 ## Installation
 
-### 1. Clone the Repository
+### Windows
 ```bash
+# Clone repository
 git clone <repository-url>
 cd mlops-assignment2
-```
 
-### 2. Create Virtual Environment
-#### macOS/Linux:
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-#### Windows:
-```bash
+# Create virtual environment
 python -m venv venv
 venv\Scripts\activate
-```
 
-### 3. Install Dependencies
-```bash
+# Install dependencies
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 4. Initialize DVC
+### macOS
 ```bash
-dvc init
+# Clone repository
+git clone <repository-url>
+cd mlops-assignment2
+
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### Ubuntu/Linux
+```bash
+# Clone repository
+git clone <repository-url>
+cd mlops-assignment2
+
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install --upgrade pip
+pip install -r requirements.txt
 ```
 
 ## Running the Project
 
 ### 1. Data Preprocessing
-Pre-processes images to 224x224 RGB and splits into 80% train, 10% validation, and 10% test sets with data augmentation.
 ```bash
 python -m src.preprocessing
 ```
 
-### 2. Model Training & Experiment Tracking
-Trains a baseline CNN model and logs parameters, metrics (confusion matrix, loss curves), and artifacts to MLflow.
+### 2. Train Model
 ```bash
 python -m src.train
 ```
+
 View MLflow UI:
 ```bash
 mlflow ui
+# Open http://localhost:5000
 ```
 
-### 3. Run Inference Service Locally
+### 3. Run Inference Service
 ```bash
 uvicorn src.app:app --host 0.0.0.0 --port 8000 --reload
 ```
-- **Health Check**: `GET http://localhost:8000/health`
-- **Predict**: `POST http://localhost:8000/predict` (Accepts image file)
 
-### 4. Run Tests
+API Endpoints:
+- Health: `GET http://localhost:8000/health`
+- Predict: `POST http://localhost:8000/predict` (upload image file)
+
+### 4. Test Prediction
+```bash
+# Using curl
+curl -X POST "http://localhost:8000/predict" -F "file=@path/to/image.jpg"
+```
+
+### 5. Run Tests
 ```bash
 pytest tests/ -v
 ```
 
 ## Docker Deployment
-### Build Docker Image
+
+### Build and Run
 ```bash
 docker build -t cats-dogs-classifier .
-```
-### Run Container
-```bash
 docker run -p 8000:8000 cats-dogs-classifier
 ```
+
 ### Using Docker Compose
 ```bash
 docker-compose up --build
 ```
 
-## CI/CD Pipeline
-- **Continuous Integration**: Automated testing and Docker image building via GitHub Actions.
-- **Continuous Deployment**: Auto-deployment to target environment upon push to main branch.
+### Smoke Test
+```bash
+python tests/smoke_test.py
+```
 
-## Monitoring & Logging
-- **Logging**: Request/Response logging enabled in the inference service.
-- **Metrics**: Tracks request count and latency.
+## CI/CD Pipeline
+GitHub Actions automatically:
+- Runs unit tests on every push
+- Builds Docker image
+- Deploys on merge to main branch
+
+## Monitoring
+- **Logging**: All requests logged with timestamp, prediction, and confidence
+- **Metrics**: Request count and latency tracked per prediction
