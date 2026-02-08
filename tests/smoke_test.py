@@ -1,6 +1,7 @@
 import requests
 import time
 
+
 def test_health_endpoint():
     url = "http://localhost:8000/health"
     for _ in range(5):
@@ -13,6 +14,7 @@ def test_health_endpoint():
             print("Waiting for service to start...")
             time.sleep(2)
     return False
+
 
 if __name__ == "__main__":
     if test_health_endpoint():
