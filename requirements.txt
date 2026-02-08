@@ -112,7 +112,7 @@ pydantic==2.10.6
 pydantic-settings==2.7.1
 pydantic_core==2.27.2
 pydot==3.0.4
-pygit2==1.17.1
+pygit2==1.17.0
 Pygments==2.19.2
 pygtrie==2.5.0
 pyparsing==3.2.1
@@ -157,7 +157,7 @@ urllib3==2.3.0
 uvicorn==0.34.0
 vine==5.1.0
 voluptuous==0.16.0
-wcwidth==0.213
+wcwidth==0.2.13
 Werkzeug==3.1.5
 yarl==1.18.3
 zc.lockfile==3.0.post1
