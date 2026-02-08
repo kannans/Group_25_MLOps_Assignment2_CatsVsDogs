@@ -1,0 +1,13 @@
+venv/
+data/
+mlruns/
+models/
+notebooks/
+.git/
+.dvc/
+*.pdf
+*.log
+__pycache__/
+.pytest_cache/
+.coverage
+htmlcov/
