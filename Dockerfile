@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
 
 # Copy requirements and install dependencies
 COPY requirements.txt .
+RUN pip install --no-cache-dir torch==2.5.1 torchvision==0.20.1 --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code
