@@ -6,34 +6,119 @@ on:
   pull_request:
     branches: [ main, master ]
 
+env:
+  REGISTRY: ghcr.io
+  # GitHub repository names can contain uppercase letters, but GHCR tags must be lowercase.
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
-  pipeline:
+  build-env:
+    name: Build Environment
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image_tag: sha-${{ github.sha }}
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Build Docker Image
-      run: |
-        docker build -t ml-pipeline-image:${{ github.sha }} .
+      - name: Downcase IMAGE_NAME
+        run: |
+          echo "IMAGE_NAME_LC=${IMAGE_NAME,,}" >> $GITHUB_ENV
 
-    - name: Run Linting (Black & Flake8)
-      run: |
-        docker run --rm ml-pipeline-image:${{ github.sha }} black --check --diff src/ tests/
-        docker run --rm ml-pipeline-image:${{ github.sha }} flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Run Unit Tests (Pytest)
-      run: |
-        docker run --rm ml-pipeline-image:${{ github.sha }} pytest tests/ -v --cov=src --cov-report=xml
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LC }}:sha-${{ github.sha }}
 
-    - name: Run Model Training
-      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
-      run: |
-        docker run --rm -e MLFLOW_TRACKING_URI=./mlruns ml-pipeline-image:${{ github.sha }} python -m src.train
+  lint:
+    name: Lint
+    needs: build-env
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    container:
+      image: ghcr.io/kannans/group_25_mlops_assignment2_catsvsdogs:sha-${{ github.sha }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Run Black
+        run: black --check --diff src/ tests/ --exclude="/(venv|mlruns|models|data)/"
+      - name: Run Flake8
+        run: |
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-    - name: Build and Push Final Registry Image
-      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
-      run: |
-        echo "Building production image..."
-        # In a real scenario, you would login and push here
-        # docker push ...
+  test:
+    name: Test
+    needs: build-env
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    container:
+      image: ghcr.io/kannans/group_25_mlops_assignment2_catsvsdogs:sha-${{ github.sha }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Run unit tests
+        run: pytest tests/ -v --cov=src --cov-report=xml
+
+  train:
+    name: Train
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    container:
+      image: ghcr.io/kannans/group_25_mlops_assignment2_catsvsdogs:sha-${{ github.sha }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    steps:
+      - name: Run model training
+        run: python -m src.train
+        env:
+          MLFLOW_TRACKING_URI: ./mlruns
+
+  push-final:
+    name: Push Final Image
+    needs: [train]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    steps:
+      - name: Downcase IMAGE_NAME
+        run: |
+          echo "IMAGE_NAME_LC=${IMAGE_NAME,,}" >> $GITHUB_ENV
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tag and push final image
+        run: |
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LC }}:sha-${{ github.sha }}
+          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LC }}:sha-${{ github.sha }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LC }}:latest
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LC }}:latest
