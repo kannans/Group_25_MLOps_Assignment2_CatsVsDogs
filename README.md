@@ -132,6 +132,36 @@ docker-compose up --build
 python tests/smoke_test.py
 ```
 
+## Kubernetes Deployment
+
+### Prerequisites
+- kubectl
+- Local cluster: minikube, kind, or microk8s
+
+### Deploy
+```bash
+# Build image
+docker build -t cats-dogs-classifier:latest .
+
+# For minikube
+minikube start
+eval $(minikube docker-env)
+docker build -t cats-dogs-classifier:latest .
+
+# For kind
+kind create cluster --name mlops-cluster
+kind load docker-image cats-dogs-classifier:latest --name mlops-cluster
+
+# Apply manifests
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
+
+# Access service
+kubectl port-forward service/cats-dogs-classifier 8000:8000
+```
+
+See [k8s/README.md](k8s/README.md) for detailed instructions.
+
 ## CI/CD Pipeline
 GitHub Actions automatically:
 - Runs unit tests on every push
