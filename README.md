@@ -55,8 +55,8 @@ The video demonstration covers:
 ### Windows
 ```bash
 # Clone repository
-git clone <repository-url>
-cd mlops-assignment2
+git clone https://github.com/kannans/Group_25_MLOps_Assignment2_CatsVsDogs.git
+cd Group_25_MLOps_Assignment2_CatsVsDogs
 
 # Create virtual environment
 python -m venv venv
@@ -70,8 +70,8 @@ pip install -r requirements.txt
 ### macOS
 ```bash
 # Clone repository
-git clone <repository-url>
-cd mlops-assignment2
+git clone https://github.com/kannans/Group_25_MLOps_Assignment2_CatsVsDogs.git
+cd Group_25_MLOps_Assignment2_CatsVsDogs
 
 # Create virtual environment
 python3 -m venv venv
@@ -85,8 +85,8 @@ pip install -r requirements.txt
 ### Ubuntu/Linux
 ```bash
 # Clone repository
-git clone <repository-url>
-cd mlops-assignment2
+git clone https://github.com/kannans/Group_25_MLOps_Assignment2_CatsVsDogs.git
+cd Group_25_MLOps_Assignment2_CatsVsDogs
 
 # Create virtual environment
 python3 -m venv venv
