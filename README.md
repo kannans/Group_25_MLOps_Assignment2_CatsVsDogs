@@ -29,6 +29,22 @@ An end-to-end MLOps pipeline for binary image classification (Cats vs Dogs) with
 └── README.md           # This file
 ```
 
+## Video Demo
+
+### 📹 Watch the Demo Video
+
+**Direct Link:** [Add your video link here]
+
+The video demonstration covers:
+- **Data Preprocessing**: Dataset overview and 80/10/10 split with augmentation
+- **Model Training**: Training baseline CNN model with MLflow tracking
+- **MLflow Tracking**: Experiment tracking and model versioning
+- **API Development**: FastAPI implementation with prediction endpoints
+- **Docker Deployment**: Containerization and Docker setup
+- **Kubernetes Deployment**: K8s deployment with services
+- **CI/CD Pipeline**: GitHub Actions workflow demonstration
+- **End-to-End Workflow**: Complete prediction pipeline demonstration
+
 ## Prerequisites
 - Python 3.9+
 - Git
