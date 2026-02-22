@@ -155,7 +155,9 @@ cython_debug/
 .vscode/
 
 # Project Specific
-data/
+data/*
+!data/**/*.dvc
+!data/**/*.gitignore
 models/
 mlruns/
 mlflow.db
