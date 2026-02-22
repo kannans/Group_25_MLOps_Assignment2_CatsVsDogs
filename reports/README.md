@@ -9,4 +9,4 @@ This directory contains project reports and screenshots.
 - **CI/CD Artifacts**: Build and deployment reports from GitHub Actions
 
 ## Video Demo Link
-https://drive.google.com/xxxxxx
+https://drive.google.com/file/d/12oekULb6YTcSI1ZPqFgx7HxDZpXvF47X/view?usp=sharing

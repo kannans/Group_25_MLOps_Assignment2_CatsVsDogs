@@ -33,7 +33,7 @@ An end-to-end MLOps pipeline for binary image classification (Cats vs Dogs) with
 
 ### 📹 Watch the Demo Video
 
-**Direct Link:** https://drive.google.com/xxxxxx
+**Direct Link:** https://drive.google.com/file/d/12oekULb6YTcSI1ZPqFgx7HxDZpXvF47X/view?usp=sharing
 
 The video demonstration covers:
 - **Data Preprocessing**: Dataset overview and 80/10/10 split with augmentation
