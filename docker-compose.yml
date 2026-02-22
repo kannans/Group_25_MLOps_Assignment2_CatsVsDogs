@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   inference-service:
-    build: .
+    image: ghcr.io/kannans/group_25_mlops_assignment2_catsvsdogs:latest
     ports:
       - "8000:8000"
     volumes:
@@ -16,3 +16,10 @@ services:
     ports:
       - "5001:5000"
     command: mlflow ui --host 0.0.0.0
+
+  watchtower:
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 60 --cleanup
+    restart: always
