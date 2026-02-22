@@ -51,6 +51,8 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
       - name: Run Black
         run: black --check --diff src/ tests/ --exclude="/(venv|mlruns|models|data)/"
       - name: Run Flake8
@@ -71,6 +73,8 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
       - name: Run unit tests
         run: pytest tests/ -v --cov=src --cov-report=xml
 
@@ -88,6 +92,8 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
       - name: Run model training
         run: python -m src.train
         env:
